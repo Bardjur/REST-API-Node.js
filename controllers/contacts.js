@@ -16,7 +16,6 @@ const gebById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  console.log(res.body);
   const data = await Contact.create(req.body);
   res.status(201).json(data);
 };
