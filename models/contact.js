@@ -6,20 +6,24 @@ const contactSchema = new Schema(
   {
     name: {
       type: String,
-      required: [true, 'Set name for contact'],
+      required: [true, "Set name for contact"],
     },
     email: {
       type: String,
       match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      required: [true, 'Set email for contact'],
+      required: [true, "Set email for contact"],
     },
     phone: {
       type: String,
-      required: [true, 'Set phone for contact'],
+      required: [true, "Set phone for contact"],
     },
     favorite: {
       type: Boolean,
       default: false,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
     },
   },
   {
@@ -40,7 +44,7 @@ const addSchema = Joi.object({
 
 const updateFavorite = Joi.object({
   favorite: Joi.boolean().required(),
-})
+});
 
 const schemas = {
   addSchema,
