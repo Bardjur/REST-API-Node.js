@@ -2,7 +2,13 @@ const { User } = require("../models/users.js");
 const bcrypt = require("bcryptjs");
 const { HttpError, ctrlWrapper } = require("../helpers/index.js");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const path = require("path");
+const fs = require("fs/promises");
+const Jimp = require("jimp");
+
 const { SECRET_KEY } = process.env;
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -13,8 +19,13 @@ const register = async (req, res) => {
   }
 
   const hashPwd = await bcrypt.hash(password, 10);
+  const avatarURL = gravatar.url(email);
 
-  const result = await User.create({ ...req.body, password: hashPwd });
+  const result = await User.create({
+    ...req.body,
+    password: hashPwd,
+    avatarURL,
+  });
 
   res.status(201).json({
     email: result.email,
@@ -32,7 +43,7 @@ const login = async (req, res) => {
 
   const isMatchesPass = await bcrypt.compare(password, user.password);
   if (!isMatchesPass) {
-    throw HttpError(401, "Email or password invalid");
+    throw HttpError(401, "Email or password is wrong");
   }
 
   const payload = {
@@ -75,10 +86,33 @@ const updateUser = async (req, res) => {
   });
 };
 
+const updateAvatar = async (req, res) => {
+  const { path: tempUpload, originalname } = req.file;
+  const fileName = `${req.user.id}-${originalname}`;
+  const resultUpload = path.join(avatarsDir, fileName);
+
+  const avatar = await Jimp.read(tempUpload);
+  await avatar.resize(250, 250).write(tempUpload);
+
+  await fs.rename(tempUpload, resultUpload);
+
+  const avatarURL = path.join("avatars", fileName);
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { avatarURL },
+    { new: true }
+  );
+
+  res.json({
+    avatarURL: user.avatarURL,
+  });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   logout: ctrlWrapper(logout),
   current: ctrlWrapper(current),
   updateUser: ctrlWrapper(updateUser),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
