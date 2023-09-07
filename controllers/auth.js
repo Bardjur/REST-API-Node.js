@@ -24,18 +24,20 @@ const register = async (req, res) => {
   const avatarURL = gravatar.url(email);
   const verificationToken = nanoid();
 
+  await sendMail({
+    to: email,
+    subject: "confirm email",
+    //html: `<a target="_blank" href="${DOMAIN}/api/users/verify/${verificationToken}"> Please confirm your email</a>`,
+    text: `Please confirm your email: ${DOMAIN}/api/users/verify/${verificationToken}`,
+  }).catch((err) => {
+    throw HttpError(err.status, err.message);
+  });
+
   const result = await User.create({
     ...req.body,
     password: hashPwd,
     verificationToken,
     avatarURL,
-  });
-
-  sendMail({
-    to: result.email,
-    subject: "confirm email",
-    //html: `<a target="_blank" href="${DOMAIN}/api/users/verify/${verificationToken}"> Please confirm your email</a>`,
-    text: `Please confirm your email: ${DOMAIN}/api/users/verify/${verificationToken}`,
   });
 
   res.status(201).json({
