@@ -27,7 +27,6 @@ const register = async (req, res) => {
   await sendMail({
     to: email,
     subject: "confirm email",
-    //html: `<a target="_blank" href="${DOMAIN}/api/users/verify/${verificationToken}"> Please confirm your email</a>`,
     text: `Please confirm your email: ${DOMAIN}/api/users/verify/${verificationToken}`,
   }).catch((err) => {
     throw HttpError(err.status, err.message);
